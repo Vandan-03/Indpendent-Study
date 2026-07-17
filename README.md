@@ -1,4 +1,4 @@
-# Crescent–Vital Acquisition: Independent Technical Valuation
+# Crescent–Vital Acquisition: Independent Technical Valuation Study
 
 An asset-level technical valuation of Crescent Energy's ~$3.1B acquisition of Vital Energy
 (announced Aug 2025, closed Dec 2025), built entirely from public data.
@@ -64,5 +64,6 @@ M.Eng. Petroleum Engineering, Colorado School of Mines.
 
 Built with Python and Excel as an independent A&D technical study.
 
+## Disclaimer
 *This is just an independent analysis using public data. Not investment advice. Not affiliated with
 Crescent Energy, Vital Energy, or any financial institution.*
