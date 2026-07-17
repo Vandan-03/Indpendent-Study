@@ -47,7 +47,7 @@ pip install pandas numpy scipy matplotlib openpyxl
 # run scripts in order from the Scripts/ folder
 python "1_clean_and_segment.py"
 python "2_decline_curve_analysis.py"
-# ... through 6 and 8
+# ... for all scripts
 ```
 
 ## Key assumptions & limitations
