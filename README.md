@@ -3,7 +3,7 @@
 An asset-level technical valuation of Crescent Energy's ~$3.1B acquisition of Vital Energy
 (announced Aug 2025, closed Dec 2025), built entirely from public data.
 
-Independent PV-10 of **~$3.1B** lands within **~1%** of the ~$3.1B Crescent
+Independent PV-10 of **~$3.15B** lands within **~1%** of the ~$3.1B Crescent
 paid, and the model reproduces street FY1 EBITDA within **0.1%** indicating the assets were
 fairly priced. Value creation in the deal is financial (synergies, refinancing, divestitures),
 not a distressed discount on the underlying rock.
@@ -25,14 +25,13 @@ Everything uses free public sources, no commercial reserve database was used for
 
 ## Key results
 
-| Metric | Value |
-|---|---|
-| Independent PV-10 (SEC pricing, unhedged) | ~$3.1B |
-| Crescent transaction value | ~$3.1B |
-| Variance to price paid | ~1% |
+| Metric | Value       |
+|---|-------------|
+| Independent PV-10 (SEC pricing, unhedged) | ~$3.15B     |
+| Crescent transaction value | ~$3.1B      |
+| Variance to price paid | ~1%         |
 | FY1 EBITDA vs. street consensus | within 0.1% |
-| Breakeven oil price (PV-10 = price paid) | ~$75/bbl WTI |
-| Median decline-curve fit quality (R²) | 0.96 |
+| Median decline-curve fit quality (R²) | 0.96        |
 
 ## Data sources
 
