@@ -17,7 +17,8 @@ def modified_arps(t, qi, Di, b, Dterm_annual=0.08):
 # the whole model wrapped in a function, so i can call it with any oil price or
 # decline multiplier and get PV-10 back. this is what lets me sweep the grid.
 def run_model(oil_px=76.76, decline_mult=1.0, wells_per_pad=4,
-              loe_mult=1.0, disc=0.10):
+              loe_mult=1.0, disc=0.10, include_ga=True):
+
     FP, DAYS, DRILL = 180, 30.4, 120   # FP = forecast months, DRILL = months of drilling
     t_future = np.arange(FP)
 
@@ -57,8 +58,9 @@ def run_model(oil_px=76.76, decline_mult=1.0, wells_per_pad=4,
     boe = total * DAYS
 
     # revenue minus opex minus capex, then discount to PV-10
+    ga = 1.75 if include_ga else 0.0
+    opex = boe * ((9.15 * loe_mult) + 2.41 + 0.92 + 0.36 + ga)
     rev = boe * (0.46 * oil_px + 0.27 * 13.66 + 0.27 * 6 * 0.85)
-    opex = boe * ((9.15 * loe_mult) + 2.41 + 0.92 + 0.36 + 1.75)
     capex = np.where(t_future < DRILL, pads_per_month * pad_cost, 0.0)
     fcf = rev - opex - capex
 
@@ -66,40 +68,33 @@ def run_model(oil_px=76.76, decline_mult=1.0, wells_per_pad=4,
     pv = (fcf / (1 + r_m) ** (t_future + 0.5)).sum()
     return pv / 1e9
 
-
-# sweep oil price down the rows, decline scenario across the columns
 oil_cases = [55, 65, 76.76, 85, 95]
 decl_cases = {"Shallow (-25%)": 0.75, "Base": 1.00, "Steep (+25%)": 1.25}
 
-grid = pd.DataFrame(
-    {name: [round(run_model(oil_px=o, decline_mult=d), 2) for o in oil_cases]
-     for name, d in decl_cases.items()},
-    index=[f"${o}" for o in oil_cases]
-)
-grid.index.name = "Oil price"
-print("PV-10 ($BN)\n")
-print(grid)
+for label, ga_flag in [("(inc. G&A)", True), ("(SEC, ex. G&A)", False)]:
+    grid = pd.DataFrame(
+        {name: [round(run_model(oil_px=o, decline_mult=d, include_ga=ga_flag), 2)
+                for o in oil_cases]
+         for name, d in decl_cases.items()},
+        index=[f"${o}" for o in oil_cases]
+    )
+    grid.index.name = "Oil price"
+    print(f"\nPV-10 ($Bn), {label}\n")
+    print(grid)
 
-# draw the grid as a heatmap with the PV-10 value written in each cell
-fig, ax = plt.subplots(figsize=(7, 5))
-data = grid.values.astype(float)
-
-im = ax.imshow(data, cmap="Blues", aspect="auto")
-
-ax.set_xticks(range(len(grid.columns)))
-ax.set_xticklabels(grid.columns, fontsize=11, fontname="Arial")
-ax.set_yticks(range(len(grid.index)))
-ax.set_yticklabels(grid.index, fontsize=11, fontname="Arial")
-ax.set_xlabel("Decline Scenario", fontsize=12, fontname="Arial")
-ax.set_ylabel("Oil Price ($/bbl)", fontsize=12, fontname="Arial")
-ax.set_title("PV-10 Sensitivity ($BN)", fontsize=14, fontweight="bold", fontname="Arial")
-
-for i in range(data.shape[0]):
-    for j in range(data.shape[1]):
-        ax.text(j, i, f"${data[i,j]:.2f}", ha="center", va="center",
-                fontsize=11, fontweight="bold")
-
-plt.colorbar(im, label="PV-10 ($BN)")
-plt.tight_layout()
-plt.savefig("../Data/Images/5. Sensitivity heatmap.png", dpi=150)
-plt.show()
+    # same heatmap block as before, with the label in the title and filename
+    fig, ax = plt.subplots(figsize=(7, 5))
+    data = grid.values.astype(float)
+    im = ax.imshow(data, cmap="Blues", aspect="auto")
+    ax.set_xticks(range(len(grid.columns))); ax.set_xticklabels(grid.columns, fontsize=11, fontname="Arial")
+    ax.set_yticks(range(len(grid.index)));  ax.set_yticklabels(grid.index, fontsize=11, fontname="Arial")
+    ax.set_xlabel("Decline Scenario", fontsize=12, fontname="Arial")
+    ax.set_ylabel("Oil Price ($/bbl)", fontsize=12, fontname="Arial")
+    ax.set_title(f"PV-10 Sensitivity ($Bn), {label}", fontsize=13, fontweight="bold", fontname="Arial")
+    for i in range(data.shape[0]):
+        for j in range(data.shape[1]):
+            ax.text(j, i, f"${data[i,j]:.2f}", ha="center", va="center", fontsize=11, fontweight="bold")
+    plt.colorbar(im, label="PV-10 ($Bn)")
+    plt.tight_layout()
+    plt.savefig(f"../Data/Images/5. Sensitivity heatmap ({'Includes G&A' if ga_flag else 'SEC'}).png", dpi=150)
+    plt.show()

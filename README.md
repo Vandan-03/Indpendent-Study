@@ -1,12 +1,14 @@
 # Crescent–Vital Acquisition: Independent Technical Valuation Study
 
-An asset-level technical valuation of Crescent Energy's ~$3.1B acquisition of Vital Energy
+An asset-level technical valuation of Crescent Energy's ~$3.1Bn acquisition of Vital Energy
 (announced Aug 2025, closed Dec 2025), built entirely from public data.
 
-Independent PV-10 of **~$3.15B** lands within **~1%** of the ~$3.1B Crescent
-paid, and the model reproduces street FY1 EBITDA within **0.1%** indicating the assets were
-fairly priced. Value creation in the deal is financial (synergies, refinancing, divestitures),
-not a distressed discount on the underlying rock.
+Standalone asset value of **~$3.15Bn** (inc. G\&A) aligns within ~1% of the $3.1Bn Crescent paid, 
+while at SEC PV-10 of $3.75Bn (ex. G\&A) highlights ~$600M in standalone overhead synergy upside. Model baseline 
+inputs reconcile 
+cleanly to street consensus FY1 EBITDA, confirming operational accuracy. Value creation in the deal is driven by 
+financial and corporate scale (G&A synergy capture, refinancing, and portfolio optimization) rather than a distressed 
+discount on the underlying rock.
 
 ---
 
@@ -14,7 +16,7 @@ not a distressed discount on the underlying rock.
 
 Rebuilds a full upstream A&D valuation workflow from scratch:
 
-1. Pulled well-level production from the Texas Railroad Commission (public).
+1. Pulled well level production from the Texas Railroad Commission (public).
 2. Clean the data and splits multi-well leases into decline segments using python scripts.
 3. Fit Arps decline curves to each segment and builds basin-level type curves.
 4. Forecast 15 years of production (existing base + new drilling).
@@ -27,8 +29,8 @@ Everything uses free public sources, no commercial reserve database was used for
 
 | Metric | Value       |
 |---|-------------|
-| Independent PV-10 (SEC pricing, unhedged) | ~$3.15B     |
-| Crescent transaction value | ~$3.1B      |
+| Independent PV-10 (SEC pricing, unhedged) | ~$3.15Bn     |
+| Crescent transaction value | ~$3.1Bn      |
 | Variance to price paid | ~1%         |
 | FY1 EBITDA vs. street consensus | within 0.1% |
 | Median decline-curve fit quality (R²) | 0.96        |

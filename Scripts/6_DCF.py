@@ -22,22 +22,18 @@ print(f"Month 0 Revenue: ${fc['Revenue'][0]/1e6:,.1f} MM")
 print(f"Year 1 Revenue:  ${fc['Revenue'][:12].sum()/1e6:,.0f} MM")
 print(f"Implied $/BOE:   ${fc['Revenue'][0]/fc['BOE / month'][0]:.2f}")
 
-# ----- opex: all the per-BOE operating costs from the 10-K -----
-opex_per_boe = {
-    "loe": 9.15,          # lease operating expense
-    "prod_tax": 2.41,     # production & ad valorem taxes
-    "oil_transport": 0.92,
-    "gpt": 0.36,          # gas gathering, processing & transport
-    "ga": 1.75,           # cash G&A, excludes LTIP and transaction costs
-}
-total_opex = sum(opex_per_boe.values())
+# ----- opex: two cost stacks, because EBITDA and SEC PV-10 define costs differently -----
+# EBITDA includes G&A (it's an operating cost). SEC PV-10 excludes corporate G&A
+# (it values the reserves, not the head office). so i keep both.
+production_costs_per_boe = 9.15 + 2.41 + 0.92 + 0.36     # LOE + prod tax + transport + GPT = 12.84
+ga_per_boe = 1.75                                         # cash G&A, ex LTIP and transaction costs
+total_opex = production_costs_per_boe + ga_per_boe        # 14.59, the full stack
 
 fc["OPEX"] = fc["BOE / month"] * total_opex
-fc["EBITDA"] = fc["Revenue"] - fc["OPEX"]
+fc["EBITDA"] = fc["Revenue"] - fc["OPEX"]                 # EBITDA uses the FULL stack
 
-print(f"Total OPEX: ${total_opex:.2f}/BOE")
-print(f"Margin:     ${fc['Revenue'][0]/fc['BOE / month'][0] - total_opex:.2f}/BOE")
-print(f"Year 1 EBITDA: ${fc['EBITDA'][:12].sum()/1e6:,.0f} MM")
+print(f"Production costs: ${production_costs_per_boe:.2f}/BOE   G&A: ${ga_per_boe:.2f}/BOE")
+print(f"Year 1 EBITDA: ${fc['EBITDA'][:12].sum()/1e6:,.0f} MM")   # should read ~$1,349MM again
 
 # ----- capex: the cost of the drilling program, only while drilling runs -----
 PAD_COST = 47.6e6          # ~4 wells x $11.9MM (10-K: $873.6MM / 73.4 net wells)
@@ -47,25 +43,32 @@ DRILL_MONTHS = 120
 fc["CAPEX"] = 0.0
 fc.loc[fc["Month"] < DRILL_MONTHS, "CAPEX"] = PADS_PER_MONTH * PAD_COST
 
-fc["Free Cash Flow"] = fc["EBITDA"] - fc["CAPEX"]
+# net operating cash flow, pre-tax, after capex. not textbook FCF (no taxes,
+# no working capital), so i don't call it that.
+fc["Net Operating Cash Flow"] = fc["EBITDA"] - fc["CAPEX"]
+
+# the SEC PV-10 version excludes G&A, so a second cash line without it
+fc["SEC Net Cash Flow"] = fc["Revenue"] - fc["BOE / month"] * production_costs_per_boe - fc["CAPEX"]
 
 print(f"Annual CAPEX (yrs 1-10): ${fc['CAPEX'][:12].sum()/1e6:,.0f} MM")
-print(f"Year 1 Free Cash Flow: ${fc['Free Cash Flow'][:12].sum()/1e6:,.0f} MM")
-print(f"Year 11 Free Cash Flow (no drilling): ${fc['Free Cash Flow'][120:132].sum()/1e6:,.0f} MM")
+print(f"Year 1 Net Operating Cash Flow: ${fc['Net Operating Cash Flow'][:12].sum()/1e6:,.0f} MM")
+print(f"Year 11 Net Operating Cash Flow (no drilling): ${fc['Net Operating Cash Flow'][120:132].sum()/1e6:,.0f} MM")
 
 # ----- discount every month's cash back to today at 10%/yr -----
 r_annual = 0.10          # SEC standard rate
 r_month = (1 + r_annual) ** (1/12) - 1          # the same 10%/yr as a monthly rate
 
-# +0.5 is the mid-month convention, cash arrives through the month not on day 1
 fc["Discount Factor"] = 1 / (1 + r_month) ** (fc["Month"] + 0.5)
-fc["PV"] = fc["Free Cash Flow"] * fc["Discount Factor"]
+fc["PV (all-in)"] = fc["Net Operating Cash Flow"] * fc["Discount Factor"]
+fc["PV (SEC)"]    = fc["SEC Net Cash Flow"] * fc["Discount Factor"]
 
-PV10 = fc["PV"].sum()   # add up all the discounted months
+pv_allin = fc["PV (all-in)"].sum()
+pv_sec   = fc["PV (SEC)"].sum()
 fc.to_csv("../Data/4) DCF Output.csv", index=False)
 
-print(f"\nPV-10 (unhedged, SEC pricing): ${PV10/1e9:,.2f} BN")
-print(f"Crescent implied EV for Vital:  $2.90 BN")
-print(f"Implied discount to asset value: ${(PV10 - 2.9e9)/1e9:,.2f} BN")
+DEAL_PRICE = 3.1e9   # what Crescent actually paid, my benchmark
 
-fc[["Month", "Total (BOE/d)"]].to_csv("../Data/5) Monthly boepd.csv", index=False)
+print(f"\nSEC PV-10 (ex G&A):            ${pv_sec/1e9:,.2f} BN")
+print(f"All-in asset value (incl G&A): ${pv_allin/1e9:,.2f} BN")
+print(f"Crescent paid:                 ${DEAL_PRICE/1e9:,.2f} BN")
+print(f"All-in vs price paid:          ${(pv_allin - DEAL_PRICE)/1e9:,.2f} BN")
